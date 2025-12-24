@@ -4,6 +4,13 @@
 
 Convert non-macro joystick input to custom macro definitions with a convenient web interface for configuration management.
 
+## 📚 文档导航 / Documentation
+
+- **[🚀 快速开始](QUICKSTART.md)** - 5分钟上手指南
+- **[🔧 硬件指南](HARDWARE_GUIDE.md)** - 硬件选择和设置
+- **[📖 使用教程](USAGE.md)** - 详细使用说明
+- **[📋 项目总结](PROJECT_SUMMARY.md)** - 完整设计方案
+
 ## 项目特点 / Features
 
 - 🎮 支持任意USB手柄输入 / Support any USB joystick input
