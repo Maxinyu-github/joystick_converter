@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joystick Converter - 手柄转换器配置</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Joystick Converter</h1>
+            <p class="subtitle">手柄输入转换器配置界面</p>
+        </header>
+
+        <div class="device-info card">
+            <h2>设备信息</h2>
+            <div class="info-row">
+                <label>设备名称:</label>
+                <input type="text" id="deviceName" placeholder="输入设备名称">
+                <button onclick="updateDeviceName()">更新</button>
+            </div>
+            <div class="info-row">
+                <label>映射数量:</label>
+                <span id="mappingsCount">0</span>
+            </div>
+            <div class="info-row">
+                <label>配置文件:</label>
+                <span id="configPath">-</span>
+            </div>
+        </div>
+
+        <div class="actions card">
+            <h2>操作</h2>
+            <div class="button-group">
+                <button class="btn-primary" onclick="reloadConfig()">🔄 重新加载</button>
+                <button class="btn-secondary" onclick="exportConfig()">📤 导出配置</button>
+                <button class="btn-secondary" onclick="showImportDialog()">📥 导入配置</button>
+                <button class="btn-success" onclick="addNewMapping()">➕ 新建映射</button>
+            </div>
+        </div>
+
+        <div class="mappings card">
+            <h2>按键映射</h2>
+            <div class="filter-bar">
+                <input type="text" id="searchFilter" placeholder="搜索映射..." onkeyup="filterMappings()">
+                <select id="typeFilter" onchange="filterMappings()">
+                    <option value="">所有类型</option>
+                    <option value="keyboard">键盘</option>
+                    <option value="keyboard_combo">组合键</option>
+                    <option value="dpad_horizontal">D-Pad 横向</option>
+                    <option value="dpad_vertical">D-Pad 纵向</option>
+                </select>
+            </div>
+            <div id="mappingsList">
+                <p class="loading">加载中...</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Joystick Converter © 2024 | <a href="https://github.com/Maxinyu-github/joystick_converter" target="_blank">GitHub</a></p>
+        </footer>
+    </div>
+
+    <!-- Import Dialog -->
+    <div id="importDialog" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeImportDialog()">&times;</span>
+            <h2>导入配置</h2>
+            <textarea id="importJson" rows="10" placeholder='粘贴JSON配置...'></textarea>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="importConfig()">导入</button>
+                <button class="btn-secondary" onclick="closeImportDialog()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Dialog -->
+    <div id="editDialog" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditDialog()">&times;</span>
+            <h2 id="editDialogTitle">编辑映射</h2>
+            <form id="editForm" onsubmit="saveMapping(event)">
+                <div class="form-group">
+                    <label>事件名称:</label>
+                    <input type="text" id="editEventName" required>
+                </div>
+                <div class="form-group">
+                    <label>类型:</label>
+                    <select id="editType" onchange="updateEditForm()" required>
+                        <option value="keyboard">键盘</option>
+                        <option value="keyboard_combo">组合键</option>
+                        <option value="dpad_horizontal">D-Pad 横向</option>
+                        <option value="dpad_vertical">D-Pad 纵向</option>
+                    </select>
+                </div>
+                <div id="editFormFields"></div>
+                <div class="form-group">
+                    <label>描述:</label>
+                    <input type="text" id="editDescription">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">保存</button>
+                    <button type="button" class="btn-secondary" onclick="closeEditDialog()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

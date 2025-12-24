@@ -1,0 +1,57 @@
+{
+  "device_name": "Default Gamepad",
+  "mappings": {
+    "BTN_A": {
+      "type": "keyboard",
+      "key": "SPACE",
+      "description": "Jump/Confirm"
+    },
+    "BTN_B": {
+      "type": "keyboard",
+      "key": "ESC",
+      "description": "Cancel/Back"
+    },
+    "BTN_X": {
+      "type": "keyboard",
+      "key": "X",
+      "description": "Attack"
+    },
+    "BTN_Y": {
+      "type": "keyboard",
+      "key": "Y",
+      "description": "Special"
+    },
+    "BTN_START": {
+      "type": "keyboard",
+      "key": "ENTER",
+      "description": "Start/Pause"
+    },
+    "BTN_SELECT": {
+      "type": "keyboard",
+      "key": "TAB",
+      "description": "Select/Menu"
+    },
+    "BTN_TL": {
+      "type": "keyboard",
+      "key": "Q",
+      "description": "Left Shoulder"
+    },
+    "BTN_TR": {
+      "type": "keyboard",
+      "key": "E",
+      "description": "Right Shoulder"
+    },
+    "ABS_HAT0X": {
+      "type": "dpad_horizontal",
+      "positive_key": "RIGHT",
+      "negative_key": "LEFT",
+      "description": "D-pad Left/Right"
+    },
+    "ABS_HAT0Y": {
+      "type": "dpad_vertical",
+      "positive_key": "DOWN",
+      "negative_key": "UP",
+      "description": "D-pad Up/Down"
+    }
+  }
+}

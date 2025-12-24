@@ -1,0 +1,57 @@
+{
+  "device_name": "Productivity Controller",
+  "mappings": {
+    "BTN_A": {
+      "type": "keyboard",
+      "key": "ENTER",
+      "description": "Confirm"
+    },
+    "BTN_B": {
+      "type": "keyboard",
+      "key": "ESC",
+      "description": "Cancel"
+    },
+    "BTN_X": {
+      "type": "keyboard_combo",
+      "combo": ["LEFTCTRL", "C"],
+      "description": "Copy"
+    },
+    "BTN_Y": {
+      "type": "keyboard_combo",
+      "combo": ["LEFTCTRL", "V"],
+      "description": "Paste"
+    },
+    "BTN_START": {
+      "type": "keyboard_combo",
+      "combo": ["LEFTCTRL", "S"],
+      "description": "Save"
+    },
+    "BTN_SELECT": {
+      "type": "keyboard_combo",
+      "combo": ["LEFTCTRL", "Z"],
+      "description": "Undo"
+    },
+    "BTN_TL": {
+      "type": "keyboard",
+      "key": "PAGEUP",
+      "description": "Page Up"
+    },
+    "BTN_TR": {
+      "type": "keyboard",
+      "key": "PAGEDOWN",
+      "description": "Page Down"
+    },
+    "ABS_HAT0X": {
+      "type": "dpad_horizontal",
+      "positive_key": "RIGHT",
+      "negative_key": "LEFT",
+      "description": "Navigate Left/Right"
+    },
+    "ABS_HAT0Y": {
+      "type": "dpad_vertical",
+      "positive_key": "DOWN",
+      "negative_key": "UP",
+      "description": "Navigate Up/Down"
+    }
+  }
+}

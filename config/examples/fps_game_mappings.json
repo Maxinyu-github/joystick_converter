@@ -1,0 +1,57 @@
+{
+  "device_name": "WASD Gaming Controller",
+  "mappings": {
+    "BTN_A": {
+      "type": "keyboard",
+      "key": "SPACE",
+      "description": "Jump"
+    },
+    "BTN_B": {
+      "type": "keyboard",
+      "key": "LEFTCTRL",
+      "description": "Crouch"
+    },
+    "BTN_X": {
+      "type": "keyboard",
+      "key": "R",
+      "description": "Reload"
+    },
+    "BTN_Y": {
+      "type": "keyboard",
+      "key": "F",
+      "description": "Interact"
+    },
+    "BTN_START": {
+      "type": "keyboard",
+      "key": "ESC",
+      "description": "Menu"
+    },
+    "BTN_SELECT": {
+      "type": "keyboard",
+      "key": "TAB",
+      "description": "Scoreboard"
+    },
+    "BTN_TL": {
+      "type": "keyboard",
+      "key": "LEFTSHIFT",
+      "description": "Sprint"
+    },
+    "BTN_TR": {
+      "type": "keyboard",
+      "key": "ENTER",
+      "description": "Fire"
+    },
+    "ABS_HAT0X": {
+      "type": "dpad_horizontal",
+      "positive_key": "D",
+      "negative_key": "A",
+      "description": "Move Left/Right"
+    },
+    "ABS_HAT0Y": {
+      "type": "dpad_vertical",
+      "positive_key": "S",
+      "negative_key": "W",
+      "description": "Move Forward/Back"
+    }
+  }
+}
