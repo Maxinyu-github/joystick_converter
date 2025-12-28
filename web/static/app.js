@@ -10,6 +10,11 @@ let gamepadConnected = false;
 let gamepadIndex = null;
 let gamepadAnimationId = null;
 
+// Gamepad testing constants
+const BUTTON_OPACITY_MIN = 0.3;
+const BUTTON_OPACITY_RANGE = 0.7;
+const AXIS_DEADZONE_THRESHOLD = 0.1;
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadDeviceInfo();
@@ -490,14 +495,16 @@ function initGamepadDisplay(gamepad) {
     const axesList = document.getElementById('axesList');
     axesList.innerHTML = '';
     
-    const axesNames = ['左摇杆 X', '左摇杆 Y', '右摇杆 X', '右摇杆 Y', 'L2', 'R2', 'D-Pad X', 'D-Pad Y'];
+    // Standard gamepad axis names (fallback to generic names for non-standard controllers)
+    const standardAxisNames = ['左摇杆 X', '左摇杆 Y', '右摇杆 X', '右摇杆 Y', 'L2', 'R2', 'D-Pad X', 'D-Pad Y'];
     
     for (let i = 0; i < gamepad.axes.length; i++) {
         const axisDiv = document.createElement('div');
         axisDiv.className = 'axis-indicator';
         axisDiv.id = `axis-${i}`;
         
-        const axisName = axesNames[i] || `轴向 ${i}`;
+        // Use standard name if available, otherwise fall back to generic name
+        const axisName = i < standardAxisNames.length ? standardAxisNames[i] : `轴向 ${i}`;
         
         axisDiv.innerHTML = `
             <div class="axis-label">${axisName}</div>
@@ -551,7 +558,7 @@ function startGamepadPolling() {
                 }
                 
                 // Update opacity based on value for pressure-sensitive buttons
-                visual.style.opacity = 0.3 + (value * 0.7);
+                visual.style.opacity = BUTTON_OPACITY_MIN + (value * BUTTON_OPACITY_RANGE);
                 valueDisplay.textContent = value.toFixed(2);
             }
         }
@@ -570,7 +577,7 @@ function startGamepadPolling() {
                 bar.style.left = `${percentage}%`;
                 
                 // Color based on position
-                if (Math.abs(value) < 0.1) {
+                if (Math.abs(value) < AXIS_DEADZONE_THRESHOLD) {
                     bar.style.backgroundColor = '#999';
                 } else {
                     bar.style.backgroundColor = '#4CAF50';
