@@ -125,7 +125,7 @@ class JoystickInputHandler:
             return
             
         event_name = self.get_event_name(event)
-        print(f"Get event name :{evenv_name}")
+        print(f"Get event name :{event_name}")
         # Call registered callback if exists
         if event_name in self.event_callbacks:
             self.event_callbacks[event_name](event_name, event.value)
