@@ -36,7 +36,7 @@ class JoystickConverter:
         """
         self.input_handler = JoystickInputHandler()
         self.mapping_engine = MappingEngine(config_path)
-        self.output_handler = USBGadgetOutputHandler() if enable_output else None
+        self.output_handler = None  # Instantiated later in setup() if needed
         self.running = False
         self.enable_output = enable_output
         self.output_available = False  # Track actual availability of output device
@@ -70,9 +70,11 @@ class JoystickConverter:
         # Connect to output device (if enabled)
         if self.enable_output:
             logger.info("Connecting to output device...")
+            self.output_handler = USBGadgetOutputHandler()
             if not self.output_handler.connect():
                 logger.warning("Failed to connect to output device - running in input-only mode")
                 self.output_available = False
+                # No cleanup needed as output_handler was just created and failed to connect
                 self.output_handler = None
             else:
                 self.output_available = True
