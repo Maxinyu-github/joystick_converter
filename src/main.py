@@ -25,17 +25,19 @@ logger = logging.getLogger(__name__)
 class JoystickConverter:
     """Main joystick converter application"""
     
-    def __init__(self, config_path: str = "/home/pi/joystick_converter/config/mappings.json"):
+    def __init__(self, config_path: str = "/home/pi/joystick_converter/config/mappings.json", enable_output: bool = True):
         """
         Initialize the converter
         
         Args:
             config_path: Path to configuration file
+            enable_output: Whether to enable output device (default: True)
         """
         self.input_handler = JoystickInputHandler()
         self.mapping_engine = MappingEngine(config_path)
-        self.output_handler = USBGadgetOutputHandler()
+        self.output_handler = USBGadgetOutputHandler() if enable_output else None
         self.running = False
+        self.enable_output = enable_output
         
     def setup(self) -> bool:
         """
@@ -63,11 +65,15 @@ class JoystickConverter:
         device_info = self.input_handler.get_device_info()
         logger.info(f"Connected to: {device_info.get('name', 'Unknown')}")
         
-        # Connect to output device
-        logger.info("Connecting to output device...")
-        if not self.output_handler.connect():
-            logger.error("Failed to connect to output device")
-            return False
+        # Connect to output device (if enabled)
+        if self.enable_output:
+            logger.info("Connecting to output device...")
+            if not self.output_handler.connect():
+                logger.warning("Failed to connect to output device - running in input-only mode")
+                self.enable_output = False
+                self.output_handler = None
+        else:
+            logger.info("Output device disabled - running in input-only mode")
             
         logger.info("All components initialized successfully")
         return True
@@ -84,9 +90,12 @@ class JoystickConverter:
         output_event = self.mapping_engine.translate_event(event_name, value)
         
         if output_event:
-            # Send output
-            self.output_handler.process_output_event(output_event)
-            logger.debug(f"{event_name}={value} -> {output_event}")
+            # Send output only if output handler is available
+            if self.output_handler:
+                self.output_handler.process_output_event(output_event)
+                logger.debug(f"{event_name}={value} -> {output_event}")
+            else:
+                logger.debug(f"{event_name}={value} -> {output_event} (output disabled)")
         else:
             logger.debug(f"No mapping for {event_name}={value}")
     
@@ -120,12 +129,14 @@ class JoystickConverter:
         
         self.running = False
         
-        # Release all keys
-        self.output_handler.release_all()
+        # Release all keys (if output handler exists)
+        if self.output_handler:
+            self.output_handler.release_all()
         
         # Disconnect devices
         self.input_handler.disconnect()
-        self.output_handler.disconnect()
+        if self.output_handler:
+            self.output_handler.disconnect()
         
         logger.info("Shutdown complete")
 
@@ -138,13 +149,21 @@ def signal_handler(signum, frame):
 
 def main():
     """Main entry point"""
+    import argparse
+    
+    # Setup argument parser
+    parser = argparse.ArgumentParser(description='Joystick Converter - Convert joystick input to keyboard/mouse output')
+    parser.add_argument('config', nargs='?', default=None, help='Path to configuration file')
+    parser.add_argument('--no-output', action='store_true', help='Run without output device (input-only mode)')
+    args = parser.parse_args()
+    
     # Setup signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
     # Determine config path
-    if len(sys.argv) > 1:
-        config_path = sys.argv[1]
+    if args.config:
+        config_path = args.config
     else:
         # Default to home directory or current directory
         config_path = Path.home() / "joystick_converter" / "config" / "mappings.json"
@@ -154,7 +173,8 @@ def main():
     logger.info(f"Using config: {config_path}")
     
     # Create and run converter
-    converter = JoystickConverter(str(config_path))
+    enable_output = not args.no_output
+    converter = JoystickConverter(str(config_path), enable_output=enable_output)
     
     if not converter.setup():
         logger.error("Setup failed")
