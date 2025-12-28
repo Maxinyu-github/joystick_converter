@@ -6,6 +6,7 @@ Main Converter - Integrates input, mapping, and output handlers
 import sys
 import signal
 import logging
+import argparse
 from pathlib import Path
 
 # Add src directory to path
@@ -38,6 +39,7 @@ class JoystickConverter:
         self.output_handler = USBGadgetOutputHandler() if enable_output else None
         self.running = False
         self.enable_output = enable_output
+        self.output_available = False  # Track actual availability of output device
         
     def setup(self) -> bool:
         """
@@ -70,10 +72,13 @@ class JoystickConverter:
             logger.info("Connecting to output device...")
             if not self.output_handler.connect():
                 logger.warning("Failed to connect to output device - running in input-only mode")
-                self.enable_output = False
+                self.output_available = False
                 self.output_handler = None
+            else:
+                self.output_available = True
         else:
             logger.info("Output device disabled - running in input-only mode")
+            self.output_available = False
             
         logger.info("All components initialized successfully")
         return True
@@ -149,8 +154,6 @@ def signal_handler(signum, frame):
 
 def main():
     """Main entry point"""
-    import argparse
-    
     # Setup argument parser
     parser = argparse.ArgumentParser(description='Joystick Converter - Convert joystick input to keyboard/mouse output')
     parser.add_argument('config', nargs='?', default=None, help='Path to configuration file')
