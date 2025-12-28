@@ -38,8 +38,10 @@ class JoystickConverter:
         self.mapping_engine = MappingEngine(config_path)
         self.output_handler = None  # Instantiated later in setup() if needed
         self.running = False
+        # enable_output: User's configuration intent (from constructor or CLI)
+        # output_available: Runtime state - whether output device is actually connected
         self.enable_output = enable_output
-        self.output_available = False  # Track actual availability of output device
+        self.output_available = False
         
     def setup(self) -> bool:
         """
@@ -74,7 +76,6 @@ class JoystickConverter:
             if not self.output_handler.connect():
                 logger.warning("Failed to connect to output device - running in input-only mode")
                 self.output_available = False
-                # No cleanup needed as output_handler was just created and failed to connect
                 self.output_handler = None
             else:
                 self.output_available = True
