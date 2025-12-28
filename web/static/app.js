@@ -5,10 +5,21 @@ const API_BASE = '/api';
 let mappingsData = {};
 let currentEditEvent = null;
 
+// Gamepad testing variables
+let gamepadConnected = false;
+let gamepadIndex = null;
+let gamepadAnimationId = null;
+
+// Gamepad testing constants
+const BUTTON_OPACITY_MIN = 0.3;
+const BUTTON_OPACITY_RANGE = 0.7;
+const AXIS_DEADZONE_THRESHOLD = 0.1;
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadDeviceInfo();
     loadMappings();
+    initGamepadTester();
 });
 
 // Load device information
@@ -396,4 +407,195 @@ function showAlert(message, type) {
     setTimeout(() => {
         alert.remove();
     }, 3000);
+}
+
+// ============================================
+// Gamepad Tester Functions
+// ============================================
+
+function initGamepadTester() {
+    // Listen for gamepad connection events
+    window.addEventListener('gamepadconnected', (e) => {
+        console.log('Gamepad connected:', e.gamepad);
+        gamepadConnected = true;
+        gamepadIndex = e.gamepad.index;
+        updateGamepadStatus(e.gamepad);
+        startGamepadPolling();
+    });
+
+    window.addEventListener('gamepaddisconnected', (e) => {
+        console.log('Gamepad disconnected:', e.gamepad);
+        gamepadConnected = false;
+        gamepadIndex = null;
+        updateGamepadStatus(null);
+        stopGamepadPolling();
+    });
+
+    // Start polling for gamepad state
+    pollGamepads();
+}
+
+function pollGamepads() {
+    // Some browsers require polling to detect gamepad connection
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+    
+    for (let i = 0; i < gamepads.length; i++) {
+        if (gamepads[i] && !gamepadConnected) {
+            gamepadConnected = true;
+            gamepadIndex = i;
+            updateGamepadStatus(gamepads[i]);
+            startGamepadPolling();
+            return;
+        }
+    }
+    
+    // Continue polling if not connected
+    if (!gamepadConnected) {
+        requestAnimationFrame(pollGamepads);
+    }
+}
+
+function updateGamepadStatus(gamepad) {
+    const statusDot = document.querySelector('.status-dot');
+    const statusText = document.getElementById('gamepadStatusText');
+    const gamepadName = document.getElementById('gamepadName');
+    
+    if (gamepad) {
+        statusDot.className = 'status-dot connected';
+        statusText.textContent = '手柄已连接';
+        gamepadName.textContent = gamepad.id;
+        initGamepadDisplay(gamepad);
+    } else {
+        statusDot.className = 'status-dot disconnected';
+        statusText.textContent = '未连接手柄 - 按下任意手柄按键以连接';
+        gamepadName.textContent = '';
+        document.getElementById('buttonsList').innerHTML = '<p class="loading">等待手柄连接...</p>';
+        document.getElementById('axesList').innerHTML = '<p class="loading">等待手柄连接...</p>';
+    }
+}
+
+function initGamepadDisplay(gamepad) {
+    // Initialize buttons display
+    const buttonsList = document.getElementById('buttonsList');
+    buttonsList.innerHTML = '';
+    
+    for (let i = 0; i < gamepad.buttons.length; i++) {
+        const buttonDiv = document.createElement('div');
+        buttonDiv.className = 'button-indicator';
+        buttonDiv.id = `button-${i}`;
+        buttonDiv.innerHTML = `
+            <div class="button-visual"></div>
+            <div class="button-label">按键 ${i}</div>
+            <div class="button-value">0.00</div>
+        `;
+        buttonsList.appendChild(buttonDiv);
+    }
+    
+    // Initialize axes display
+    const axesList = document.getElementById('axesList');
+    axesList.innerHTML = '';
+    
+    // Standard gamepad axis names (fallback to generic names for non-standard controllers)
+    const standardAxisNames = ['左摇杆 X', '左摇杆 Y', '右摇杆 X', '右摇杆 Y', 'L2', 'R2', 'D-Pad X', 'D-Pad Y'];
+    
+    for (let i = 0; i < gamepad.axes.length; i++) {
+        const axisDiv = document.createElement('div');
+        axisDiv.className = 'axis-indicator';
+        axisDiv.id = `axis-${i}`;
+        
+        // Use standard name if available, otherwise fall back to generic name
+        const axisName = i < standardAxisNames.length ? standardAxisNames[i] : `轴向 ${i}`;
+        
+        axisDiv.innerHTML = `
+            <div class="axis-label">${axisName}</div>
+            <div class="axis-bar-container">
+                <div class="axis-bar" id="axis-bar-${i}"></div>
+                <div class="axis-center"></div>
+            </div>
+            <div class="axis-value">0.00</div>
+        `;
+        axesList.appendChild(axisDiv);
+    }
+}
+
+function startGamepadPolling() {
+    if (gamepadAnimationId) {
+        return; // Already polling
+    }
+    
+    function updateGamepadState() {
+        if (!gamepadConnected) {
+            gamepadAnimationId = null;
+            return;
+        }
+        
+        const gamepads = navigator.getGamepads();
+        const gamepad = gamepads[gamepadIndex];
+        
+        if (!gamepad) {
+            gamepadConnected = false;
+            updateGamepadStatus(null);
+            return;
+        }
+        
+        // Update buttons
+        for (let i = 0; i < gamepad.buttons.length; i++) {
+            const button = gamepad.buttons[i];
+            const buttonDiv = document.getElementById(`button-${i}`);
+            
+            if (buttonDiv) {
+                const visual = buttonDiv.querySelector('.button-visual');
+                const valueDisplay = buttonDiv.querySelector('.button-value');
+                
+                const value = typeof button === 'object' ? button.value : button;
+                const pressed = typeof button === 'object' ? button.pressed : button === 1.0;
+                
+                // Update visual state
+                if (pressed) {
+                    visual.classList.add('active');
+                } else {
+                    visual.classList.remove('active');
+                }
+                
+                // Update opacity based on value for pressure-sensitive buttons
+                visual.style.opacity = BUTTON_OPACITY_MIN + (value * BUTTON_OPACITY_RANGE);
+                valueDisplay.textContent = value.toFixed(2);
+            }
+        }
+        
+        // Update axes
+        for (let i = 0; i < gamepad.axes.length; i++) {
+            const value = gamepad.axes[i];
+            const axisDiv = document.getElementById(`axis-${i}`);
+            
+            if (axisDiv) {
+                const bar = document.getElementById(`axis-bar-${i}`);
+                const valueDisplay = axisDiv.querySelector('.axis-value');
+                
+                // Update bar position (value ranges from -1 to 1)
+                const percentage = ((value + 1) / 2) * 100;
+                bar.style.left = `${percentage}%`;
+                
+                // Color based on position
+                if (Math.abs(value) < AXIS_DEADZONE_THRESHOLD) {
+                    bar.style.backgroundColor = '#999';
+                } else {
+                    bar.style.backgroundColor = '#4CAF50';
+                }
+                
+                valueDisplay.textContent = value.toFixed(2);
+            }
+        }
+        
+        gamepadAnimationId = requestAnimationFrame(updateGamepadState);
+    }
+    
+    gamepadAnimationId = requestAnimationFrame(updateGamepadState);
+}
+
+function stopGamepadPolling() {
+    if (gamepadAnimationId) {
+        cancelAnimationFrame(gamepadAnimationId);
+        gamepadAnimationId = null;
+    }
 }

@@ -40,6 +40,38 @@
             </div>
         </div>
 
+        <div class="gamepad-tester card">
+            <h2>🎮 手柄测试</h2>
+            <div class="gamepad-status">
+                <div class="status-indicator" id="gamepadStatus">
+                    <span class="status-dot disconnected"></span>
+                    <span id="gamepadStatusText">未连接手柄 - 按下任意手柄按键以连接</span>
+                </div>
+                <div id="gamepadName" class="gamepad-name"></div>
+            </div>
+            
+            <div class="gamepad-controls">
+                <div class="buttons-section">
+                    <h3>按键状态</h3>
+                    <div id="buttonsList" class="buttons-grid">
+                        <p class="loading">等待手柄连接...</p>
+                    </div>
+                </div>
+                
+                <div class="axes-section">
+                    <h3>摇杆/轴向状态</h3>
+                    <div id="axesList" class="axes-grid">
+                        <p class="loading">等待手柄连接...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gamepad-help">
+                <p><strong>💡 提示：</strong> 此功能使用浏览器 Gamepad API 直接检测手柄输入，无需安装任何驱动程序。</p>
+                <p>支持 Xbox、PlayStation、Switch 等大部分 USB/蓝牙手柄。</p>
+            </div>
+        </div>
+
         <div class="mappings card">
             <h2>按键映射</h2>
             <div class="filter-bar">
