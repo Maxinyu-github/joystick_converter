@@ -119,12 +119,13 @@ class JoystickInputHandler:
         Args:
             event: evdev InputEvent
         """
+        print(f"event.type:{event.type}")
         # Only process key and absolute axis events
         if event.type not in [ecodes.EV_KEY, ecodes.EV_ABS]:
             return
             
         event_name = self.get_event_name(event)
-        
+        print(f"Get event name :{evenv_name}")
         # Call registered callback if exists
         if event_name in self.event_callbacks:
             self.event_callbacks[event_name](event_name, event.value)
