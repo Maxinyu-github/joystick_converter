@@ -464,11 +464,13 @@ function updateGamepadStatus(gamepad) {
         statusDot.className = 'status-dot connected';
         statusText.textContent = '手柄已连接';
         gamepadName.textContent = gamepad.id;
+        gamepadName.style.display = 'block';
         initGamepadDisplay(gamepad);
     } else {
         statusDot.className = 'status-dot disconnected';
         statusText.textContent = '未连接手柄 - 按下任意手柄按键以连接';
         gamepadName.textContent = '';
+        gamepadName.style.display = 'none';
         document.getElementById('buttonsList').innerHTML = '<p class="loading">等待手柄连接...</p>';
         document.getElementById('axesList').innerHTML = '<p class="loading">等待手柄连接...</p>';
     }
