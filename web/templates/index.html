@@ -72,6 +72,43 @@
             </div>
         </div>
 
+        <div class="backend-input-tester card">
+            <h2>🔌 后端输入检测 (Backend Input Detection)</h2>
+            <div class="backend-input-status">
+                <div class="status-indicator" id="backendInputStatus">
+                    <span class="status-dot disconnected"></span>
+                    <span id="backendInputStatusText">未连接设备</span>
+                </div>
+                <div id="backendDeviceName" class="gamepad-name" style="display: none;"></div>
+            </div>
+            
+            <div class="backend-input-controls">
+                <div class="form-group">
+                    <label>选择输入设备:</label>
+                    <select id="backendDeviceSelect" style="width: 100%; padding: 8px; margin: 10px 0;">
+                        <option value="">加载中...</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="connectBackendDevice()">🔌 连接设备</button>
+                    <button class="btn-secondary" onclick="disconnectBackendDevice()">⏹️ 断开连接</button>
+                    <button class="btn-secondary" onclick="refreshBackendDevices()">🔄 刷新设备列表</button>
+                </div>
+            </div>
+            
+            <div id="backendEventDisplay" class="backend-events" style="display: none;">
+                <h3>实时事件流</h3>
+                <div id="backendEventsList" class="events-list">
+                    <p class="loading">等待输入事件...</p>
+                </div>
+            </div>
+            
+            <div class="gamepad-help">
+                <p><strong>💡 提示：</strong> 此功能直接从 Linux 输入设备读取手柄事件，与实际转换器使用的输入源相同。</p>
+                <p>使用此功能可以查看手柄产生的真实事件名称（如 BTN_A、ABS_X 等），用于配置按键映射。</p>
+            </div>
+        </div>
+
         <div class="mappings card">
             <h2>按键映射</h2>
             <div class="filter-bar">

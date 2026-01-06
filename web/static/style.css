@@ -573,3 +573,123 @@ footer a:hover {
         height: 30px;
     }
 }
+
+/* Backend Input Tester Styles */
+.backend-input-tester {
+    margin-top: 30px;
+}
+
+.backend-input-status {
+    margin-bottom: 20px;
+}
+
+.backend-input-controls {
+    margin: 20px 0;
+}
+
+.backend-events {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+.events-container {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.event-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 5px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+.event-press {
+    background: #e8f5e9;
+    border-left: 3px solid var(--success-color);
+}
+
+.event-release {
+    background: #f5f5f5;
+    border-left: 3px solid #999;
+}
+
+.event-name {
+    font-weight: bold;
+    color: var(--primary-color);
+    flex: 1;
+}
+
+.event-value {
+    padding: 2px 8px;
+    background: white;
+    border-radius: 3px;
+    margin: 0 10px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.event-time {
+    color: #666;
+    font-size: 0.85em;
+}
+
+.events-summary {
+    padding: 15px;
+    background: white;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+}
+
+.events-summary strong {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.event-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.event-tag {
+    display: inline-block;
+    padding: 5px 12px;
+    background: var(--secondary-color);
+    color: white;
+    border-radius: 15px;
+    font-size: 0.85em;
+    font-family: 'Courier New', monospace;
+}
+
+/* Scrollbar styling for events container */
+.events-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.events-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.events-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.events-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

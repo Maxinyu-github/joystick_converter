@@ -15,11 +15,18 @@ const BUTTON_OPACITY_MIN = 0.3;
 const BUTTON_OPACITY_RANGE = 0.7;
 const AXIS_DEADZONE_THRESHOLD = 0.1;
 
+// Backend input detection variables
+let backendInputConnected = false;
+let backendEventSource = null;
+let backendEventLog = [];
+const MAX_BACKEND_EVENTS = 50;
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadDeviceInfo();
     loadMappings();
     initGamepadTester();
+    initBackendInputTester();
 });
 
 // Load device information
@@ -600,4 +607,226 @@ function stopGamepadPolling() {
         cancelAnimationFrame(gamepadAnimationId);
         gamepadAnimationId = null;
     }
+}
+
+// ============================================
+// Backend Input Tester Functions
+// ============================================
+
+async function initBackendInputTester() {
+    // Load available input devices
+    await refreshBackendDevices();
+}
+
+async function refreshBackendDevices() {
+    try {
+        const response = await fetch(`${API_BASE}/input/devices`);
+        const data = await response.json();
+        
+        const selectElement = document.getElementById('backendDeviceSelect');
+        selectElement.innerHTML = '';
+        
+        if (data.devices && data.devices.length > 0) {
+            // Add default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '-- 选择设备 --';
+            selectElement.appendChild(defaultOption);
+            
+            // Add devices
+            data.devices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.path;
+                option.textContent = `${device.name} (${device.path})${device.is_gamepad ? ' [手柄]' : ''}`;
+                selectElement.appendChild(option);
+            });
+            
+            showAlert('设备列表已刷新', 'success');
+        } else {
+            selectElement.innerHTML = '<option value="">未找到输入设备</option>';
+            showAlert('未找到输入设备', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading devices:', error);
+        showAlert('加载设备列表失败', 'error');
+    }
+}
+
+async function connectBackendDevice() {
+    const selectElement = document.getElementById('backendDeviceSelect');
+    const devicePath = selectElement.value;
+    
+    if (!devicePath) {
+        showAlert('请选择一个设备', 'error');
+        return;
+    }
+    
+    try {
+        // Disconnect existing connection
+        if (backendInputConnected) {
+            await disconnectBackendDevice();
+        }
+        
+        // Connect to device
+        const response = await fetch(`${API_BASE}/input/connect`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({device_path: devicePath})
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            backendInputConnected = true;
+            updateBackendStatus(true, data.device_name);
+            startBackendEventStream();
+            showAlert('已连接到设备', 'success');
+        } else {
+            showAlert(data.error || '连接失败', 'error');
+        }
+    } catch (error) {
+        console.error('Error connecting to device:', error);
+        showAlert('连接设备失败', 'error');
+    }
+}
+
+async function disconnectBackendDevice() {
+    try {
+        // Stop event stream
+        stopBackendEventStream();
+        
+        // Disconnect from backend
+        await fetch(`${API_BASE}/input/disconnect`, {
+            method: 'POST'
+        });
+        
+        backendInputConnected = false;
+        updateBackendStatus(false);
+        clearBackendEvents();
+        showAlert('已断开连接', 'success');
+    } catch (error) {
+        console.error('Error disconnecting device:', error);
+        showAlert('断开连接失败', 'error');
+    }
+}
+
+function updateBackendStatus(connected, deviceName = '') {
+    const statusDot = document.querySelector('#backendInputStatus .status-dot');
+    const statusText = document.getElementById('backendInputStatusText');
+    const deviceNameDisplay = document.getElementById('backendDeviceName');
+    const eventDisplay = document.getElementById('backendEventDisplay');
+    
+    if (connected) {
+        statusDot.className = 'status-dot connected';
+        statusText.textContent = '已连接';
+        deviceNameDisplay.textContent = deviceName;
+        deviceNameDisplay.style.display = 'block';
+        eventDisplay.style.display = 'block';
+    } else {
+        statusDot.className = 'status-dot disconnected';
+        statusText.textContent = '未连接设备';
+        deviceNameDisplay.textContent = '';
+        deviceNameDisplay.style.display = 'none';
+        eventDisplay.style.display = 'none';
+    }
+}
+
+function startBackendEventStream() {
+    // Close existing connection
+    if (backendEventSource) {
+        backendEventSource.close();
+    }
+    
+    // Create new EventSource for SSE
+    backendEventSource = new EventSource(`${API_BASE}/input/events`);
+    
+    backendEventSource.onmessage = function(event) {
+        try {
+            const eventData = JSON.parse(event.data);
+            addBackendEvent(eventData);
+        } catch (error) {
+            console.error('Error parsing event data:', error);
+        }
+    };
+    
+    backendEventSource.onerror = function(error) {
+        console.error('EventSource error:', error);
+        if (backendInputConnected) {
+            // Try to reconnect after a short delay
+            setTimeout(() => {
+                if (backendInputConnected && backendEventSource.readyState === EventSource.CLOSED) {
+                    console.log('Attempting to reconnect event stream...');
+                    startBackendEventStream();
+                }
+            }, 2000);
+        }
+    };
+}
+
+function stopBackendEventStream() {
+    if (backendEventSource) {
+        backendEventSource.close();
+        backendEventSource = null;
+    }
+}
+
+function addBackendEvent(eventData) {
+    // Add to event log
+    backendEventLog.unshift(eventData);
+    
+    // Keep only recent events
+    if (backendEventLog.length > MAX_BACKEND_EVENTS) {
+        backendEventLog = backendEventLog.slice(0, MAX_BACKEND_EVENTS);
+    }
+    
+    // Update display
+    displayBackendEvents();
+}
+
+function displayBackendEvents() {
+    const eventsList = document.getElementById('backendEventsList');
+    
+    if (backendEventLog.length === 0) {
+        eventsList.innerHTML = '<p class="loading">等待输入事件...</p>';
+        return;
+    }
+    
+    let html = '<div class="events-container">';
+    
+    // Group recent events by event name for better visualization
+    const recentEvents = backendEventLog.slice(0, 10);
+    
+    recentEvents.forEach(event => {
+        const timestamp = new Date(event.timestamp * 1000).toLocaleTimeString();
+        const eventClass = event.value === 0 ? 'event-release' : 'event-press';
+        
+        html += `
+            <div class="event-item ${eventClass}">
+                <span class="event-name">${event.event_name}</span>
+                <span class="event-value">${event.value}</span>
+                <span class="event-time">${timestamp}</span>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    
+    // Add summary of all unique events seen
+    const uniqueEvents = [...new Set(backendEventLog.map(e => e.event_name))];
+    html += `
+        <div class="events-summary">
+            <strong>检测到的事件类型 (${uniqueEvents.length}):</strong>
+            <div class="event-tags">
+                ${uniqueEvents.map(name => `<span class="event-tag">${name}</span>`).join('')}
+            </div>
+        </div>
+    `;
+    
+    eventsList.innerHTML = html;
+}
+
+function clearBackendEvents() {
+    backendEventLog = [];
+    const eventsList = document.getElementById('backendEventsList');
+    eventsList.innerHTML = '<p class="loading">等待输入事件...</p>';
 }
