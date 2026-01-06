@@ -20,6 +20,9 @@ let backendInputConnected = false;
 let backendEventSource = null;
 let backendEventLog = [];
 const MAX_BACKEND_EVENTS = 50;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_BASE_DELAY = 2000; // 2 seconds
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -678,6 +681,7 @@ async function connectBackendDevice() {
         
         if (response.ok && data.success) {
             backendInputConnected = true;
+            reconnectAttempts = 0; // Reset reconnect counter
             updateBackendStatus(true, data.device_name);
             startBackendEventStream();
             showAlert('已连接到设备', 'success');
@@ -701,6 +705,7 @@ async function disconnectBackendDevice() {
         });
         
         backendInputConnected = false;
+        reconnectAttempts = 0; // Reset reconnect counter
         updateBackendStatus(false);
         clearBackendEvents();
         showAlert('已断开连接', 'success');
@@ -744,21 +749,31 @@ function startBackendEventStream() {
         try {
             const eventData = JSON.parse(event.data);
             addBackendEvent(eventData);
+            reconnectAttempts = 0; // Reset on successful message
         } catch (error) {
             console.error('Error parsing event data:', error);
+            showAlert('接收事件数据时出错', 'error');
         }
     };
     
     backendEventSource.onerror = function(error) {
         console.error('EventSource error:', error);
-        if (backendInputConnected) {
-            // Try to reconnect after a short delay
+        if (backendInputConnected && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            // Exponential backoff: 2s, 4s, 8s, 16s, 32s
+            const delay = RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttempts);
+            reconnectAttempts++;
+            
+            console.log(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) in ${delay}ms...`);
+            
             setTimeout(() => {
                 if (backendInputConnected && backendEventSource.readyState === EventSource.CLOSED) {
-                    console.log('Attempting to reconnect event stream...');
                     startBackendEventStream();
                 }
-            }, 2000);
+            }, delay);
+        } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+            showAlert('事件流连接失败，已达到最大重试次数', 'error');
+            backendInputConnected = false;
+            updateBackendStatus(false);
         }
     };
 }

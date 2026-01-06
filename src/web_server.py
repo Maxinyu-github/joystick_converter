@@ -10,7 +10,7 @@ import threading
 import time
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_from_directory, Response
-from queue import Queue, Empty
+from queue import Queue, Empty, Full
 
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -265,7 +265,7 @@ def connect_input_device():
                     'value': value,
                     'timestamp': time.time()
                 }, block=False)
-            except:
+            except Full:
                 pass  # Queue full, drop event
         
         # Register callbacks for common gamepad events
@@ -318,11 +318,11 @@ def stream_input_events():
             while True:
                 try:
                     # Get event from queue with timeout
-                    event = event_queue.get(timeout=1.0)
+                    event = event_queue.get(timeout=5.0)
                     # Send as SSE format
                     yield f"data: {json.dumps(event)}\n\n"
                 except Empty:
-                    # Send keepalive ping
+                    # Send keepalive ping every 5 seconds
                     yield f": keepalive\n\n"
                 except Exception as e:
                     logger.error(f"Error in event stream: {e}")
@@ -358,7 +358,7 @@ def disconnect_input_device_internal():
     # Stop the event loop thread
     if input_thread and input_thread.is_alive():
         input_thread_running = False
-        input_thread.join(timeout=2.0)
+        input_thread.join(timeout=5.0)  # Increased timeout for clean shutdown
         input_thread = None
     
     # Disconnect the device
